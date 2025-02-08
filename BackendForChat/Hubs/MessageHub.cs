@@ -5,9 +5,9 @@ namespace BackendForChat.Hubs
 {
     public class MessageHub : Hub
     {
-        public async Task SendMessage(string userId, string message)
+        public async Task SendMessage(string message)
         {
-            await Clients.User(userId).SendAsync("ReceiveMessage", message);
+            await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }
 }

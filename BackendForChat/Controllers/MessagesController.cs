@@ -134,7 +134,7 @@ namespace BackendForChat.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveMessage", model.Content);
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", model.Content);
 
             return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, new
             {

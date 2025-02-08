@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +41,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
 builder.Services.AddSignalR();
+builder.WebHost.UseKestrel(options =>
+{
+    options.Listen(IPAddress.Any, 5001); // HTTP
+    options.Listen(IPAddress.Any, 7168, listenOptions =>
+    {
+        listenOptions.UseHttps("F:\\cert.pfx", "saymyname");
+    });
+});
+
+
 
 var app = builder.Build();
 
