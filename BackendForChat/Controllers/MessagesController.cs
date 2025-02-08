@@ -1,6 +1,8 @@
-﻿using BackendForChat.Models;
-using Microsoft.AspNetCore.Http;
+﻿using BackendForChat.Hubs;
+using BackendForChat.Models;
+using BackendForChat.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -11,11 +13,13 @@ namespace BackendForChat.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
-        public MessagesController(ApplicationDbContext context, IConfiguration configuration)
+        private readonly EncryptionService _encryptionService;
+        private readonly IHubContext<MessageHub> _hubContext;
+        public MessagesController(ApplicationDbContext context, EncryptionService encryptionService, IHubContext<MessageHub> hubContext)
         {
             _context = context;
-            _configuration = configuration;
+            _encryptionService = encryptionService;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -28,13 +32,80 @@ namespace BackendForChat.Controllers
             }
             int userId = int.Parse(userIdClaim.Value);
 
-            var messages = await _context.Messages.Where(x => x.UserId == userId).ToListAsync();
+            var encryptedMessages = await _context.Messages.Where(x => x.UserId == userId).ToListAsync();
 
-            if (messages == null || messages.Count == 0)
+            if (encryptedMessages == null || encryptedMessages.Count == 0)
             {
                 return NotFound("No messages");
             }
-            return Ok(messages);
+
+            var decryptedMessages = encryptedMessages.Select(message => new
+            {
+                message.Id,
+                Content = _encryptionService.Decrypt(message.Content),
+                message.UserId,
+                message.CreatedAt
+            });
+
+            return Ok(decryptedMessages);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMessageById(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            var message = await _context.Messages.FindAsync(id);
+            if (message == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new
+            {
+                message.Id,
+                Content = _encryptionService.Decrypt(message.Content),
+                message.UserId,
+                message.CreatedAt
+            });
+        }
+
+        [HttpGet("paged")]
+        public async Task<IActionResult> GetMessagesPaged(int page = 1, int pageSize = 50)
+        {
+            if (pageSize > 100) pageSize = 100; 
+            if (page < 1) page = 1; 
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            var messages = await _context.Messages
+                .Where(message => message.UserId == userId)
+                .OrderByDescending(message => message.CreatedAt) // Последние сообщения первыми
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var decryptedMessages = messages.Select(message => new
+            {
+                message.Id,
+                Content = _encryptionService.Decrypt(message.Content),
+                message.UserId,
+                message.CreatedAt
+            });
+
+            return Ok(decryptedMessages);
         }
 
         [HttpPost]
@@ -55,7 +126,7 @@ namespace BackendForChat.Controllers
 
             var message = new MessageModel
             {
-                Content = model.Content,
+                Content = _encryptionService.Encrypt(model.Content),
                 UserId = userId,  
                 CreatedAt = DateTime.UtcNow  
             };
@@ -63,7 +134,14 @@ namespace BackendForChat.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMessages), new { id = message.Id }, message);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveMessage", model.Content);
+
+            return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, new
+            {
+                message.Id,
+                Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
+                message.CreatedAt
+            });
         }
     }
 }
