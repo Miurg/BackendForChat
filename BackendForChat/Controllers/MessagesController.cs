@@ -120,12 +120,19 @@ namespace BackendForChat.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", model.Content);
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", new
+            {
+                message.Id,
+                Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
+                message.UserId,
+                message.CreatedAt
+            });
 
             return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, new
             {
                 message.Id,
                 Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
+                message.UserId,
                 message.CreatedAt
             });
         }
