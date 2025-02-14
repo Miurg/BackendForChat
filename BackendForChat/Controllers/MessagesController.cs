@@ -1,6 +1,7 @@
 ﻿using BackendForChat.Hubs;
 using BackendForChat.Models;
 using BackendForChat.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ namespace BackendForChat.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MessagesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -22,45 +24,38 @@ namespace BackendForChat.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetMessages()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized("User not authenticated");
-            }
-            int userId = int.Parse(userIdClaim.Value);
+        //[Authorize]
+        //[HttpGet]
+        //public async Task<IActionResult> GetMessages()
+        //{
+        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        //    if (userIdClaim == null)
+        //    {
+        //        return Unauthorized("User not authenticated");
+        //    }
+        //    int userId = int.Parse(userIdClaim.Value);
 
-            var encryptedMessages = await _context.Messages.Where(x => x.UserId == userId).ToListAsync();
+        //    var encryptedMessages = await _context.Messages.Where(x => x.UserId == userId).ToListAsync();
 
-            if (encryptedMessages == null || encryptedMessages.Count == 0)
-            {
-                return NotFound("No messages");
-            }
+        //    if (encryptedMessages == null || encryptedMessages.Count == 0)
+        //    {
+        //        return NotFound("No messages");
+        //    }
 
-            var decryptedMessages = encryptedMessages.Select(message => new
-            {
-                message.Id,
-                Content = _encryptionService.Decrypt(message.Content),
-                message.UserId,
-                message.CreatedAt
-            });
+        //    var decryptedMessages = encryptedMessages.Select(message => new
+        //    {
+        //        message.Id,
+        //        Content = _encryptionService.Decrypt(message.Content),
+        //        message.UserId,
+        //        message.CreatedAt
+        //    });
 
-            return Ok(decryptedMessages);
-        }
+        //    return Ok(decryptedMessages);
+        //}
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMessageById(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized("User not authenticated");
-            }
-
-            int userId = int.Parse(userIdClaim.Value);
-
             var message = await _context.Messages.FindAsync(id);
             if (message == null)
             {
@@ -82,16 +77,7 @@ namespace BackendForChat.Controllers
             if (pageSize > 100) pageSize = 100; 
             if (page < 1) page = 1; 
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized("User not authenticated");
-            }
-
-            int userId = int.Parse(userIdClaim.Value);
-
             var messages = await _context.Messages
-                .Where(message => message.UserId == userId)
                 .OrderByDescending(message => message.CreatedAt) // Последние сообщения первыми
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -124,7 +110,7 @@ namespace BackendForChat.Controllers
 
             int userId = int.Parse(userIdClaim.Value);
 
-            var message = new MessageModel
+            MessageModel message = new MessageModel
             {
                 Content = _encryptionService.Encrypt(model.Content),
                 UserId = userId,  

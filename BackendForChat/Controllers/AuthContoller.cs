@@ -1,11 +1,14 @@
 ﻿using BackendForChat.Models;
+using BackendForChat.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BackendForChat.Services;
 
 namespace BackendForChat.Controllers
 {
@@ -15,17 +18,21 @@ namespace BackendForChat.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly UserService _userService;
+        private readonly AuthService _authService;
         PasswordHasher<UserModel> passwordHasher = new PasswordHasher<UserModel>();
-        public AuthController(ApplicationDbContext context, IConfiguration configuration)
+        public AuthController(ApplicationDbContext context, IConfiguration configuration, UserService userService, AuthService authService)
         {
             _context = context;
             _configuration = configuration;
+            _userService = userService;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            if (await _context.Users.AnyAsync(u => u.Username == model.Username))
+            if (await _userService.UserExistsAsync(model.Username))
             {
                 return BadRequest("User already exists");
             }
@@ -36,50 +43,35 @@ namespace BackendForChat.Controllers
                 PasswordHash = passwordHasher.HashPassword(null, model.Password)
             };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            int newUserId = await _userService.CreateUserAsync(user);
 
-            return Ok("User registered successfully!");
+            return CreatedAtAction(nameof(GetUserById), new { id = newUserId }, new { user.Id, user.Username });
+        }
+
+        [HttpGet("users/{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+            return Ok(user);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
+            Debug.WriteLine("Acces try");
+            var (success, errorMessage, token) = await _authService.AuthenticateUserAsync(model.Username, model.Password);
 
-            if (user == null)
-                return Unauthorized("Invalid credentials");
-
-            var passwordHasher = new PasswordHasher<UserModel>();
-            if (passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password) != PasswordVerificationResult.Success)
+            if (!success)
             {
-                return Unauthorized("Invalid credentials");
-            }
-
-            var token = GenerateJwtToken(user);
+                return Unauthorized(new { message = errorMessage });
+            } 
             return Ok(new { token });
         }
 
-        private string GenerateJwtToken(UserModel user)
-        {
-            var claims = new[]
-            {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["JwtSettings:Issuer"],
-                audience: _configuration["JwtSettings:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
     }
 
 }

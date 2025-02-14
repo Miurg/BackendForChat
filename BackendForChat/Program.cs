@@ -2,6 +2,7 @@ using BackendForChat.Hubs;
 using BackendForChat.Models;
 using BackendForChat.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<AuthService>();  
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 builder.Services.AddSignalR();
 builder.WebHost.UseKestrel(options =>
 {
