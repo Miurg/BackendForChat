@@ -27,7 +27,12 @@ namespace BackendForChat.Controllers
             {
                 return NotFound("User not found");
             }
-            return Ok(user);
+            return Ok(new
+            {
+                id = user.Id,
+                Username = user.Username
+            }
+            );
         }
     }
 }

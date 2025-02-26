@@ -14,14 +14,14 @@ namespace BackendForChat.Controllers
     [Authorize]
     public class MessagesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
         private readonly EncryptionService _encryptionService;
         private readonly IHubContext<MessageHub> _hubContext;
-        public MessagesController(ApplicationDbContext context, EncryptionService encryptionService, IHubContext<MessageHub> hubContext)
+        private readonly MessageService _messageService;
+        public MessagesController(EncryptionService encryptionService, IHubContext<MessageHub> hubContext, MessageService messageService)
         {
-            _context = context;
             _encryptionService = encryptionService;
             _hubContext = hubContext;
+            _messageService = messageService;
         }
 
         //[Authorize]
@@ -56,7 +56,7 @@ namespace BackendForChat.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMessageById(int id)
         {
-            var message = await _context.Messages.FindAsync(id);
+            var message = await _messageService.GetMessageById(id);
             if (message == null)
             {
                 return NotFound();
@@ -77,11 +77,7 @@ namespace BackendForChat.Controllers
             if (pageSize > 100) pageSize = 100; 
             if (page < 1) page = 1; 
 
-            var messages = await _context.Messages
-                .OrderByDescending(message => message.CreatedAt) // Последние сообщения первыми
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            var messages = await _messageService.GetMessagesPaged(page, pageSize);
 
             var decryptedMessages = messages.Select(message => new
             {
@@ -107,18 +103,9 @@ namespace BackendForChat.Controllers
             {
                 return Unauthorized("User not authenticated");
             }
-
             int userId = int.Parse(userIdClaim.Value);
 
-            MessageModel message = new MessageModel
-            {
-                Content = _encryptionService.Encrypt(model.Content),
-                UserId = userId,  
-                CreatedAt = DateTime.UtcNow  
-            };
-
-            _context.Messages.Add(message);
-            await _context.SaveChangesAsync();
+            var message = await _messageService.SaveMessageAsync(model, userId);
 
             await _hubContext.Clients.All.SendAsync("ReceiveMessage", new
             {

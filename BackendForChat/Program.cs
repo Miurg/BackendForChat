@@ -7,8 +7,11 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +48,8 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();  
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
-builder.Services.AddSignalR();
+builder.Services.AddScoped<MessageService>();
+builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 builder.WebHost.UseKestrel(options =>
 {
     options.Listen(IPAddress.Any, 5001); // HTTP
