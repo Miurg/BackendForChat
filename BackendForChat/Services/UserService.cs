@@ -1,4 +1,5 @@
 ﻿using BackendForChat.Models;
+using BackendForChat.Models.DatabaseContext;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendForChat.Services
@@ -12,7 +13,7 @@ namespace BackendForChat.Services
             _context = context;
         }
 
-        public async Task<UserModel?> GetUserByIdAsync(int id)
+        public async Task<UserModel?> GetUserByIdAsync(Guid id)
         {
             return await _context.Users.FindAsync(id);
         }
@@ -21,7 +22,7 @@ namespace BackendForChat.Services
         {
             return await _context.Users.AnyAsync(u => u.Username == username);
         }
-        public async Task<int> CreateUserAsync(UserModel user)
+        public async Task<Guid> CreateUserAsync(UserModel user)
         {
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

@@ -9,6 +9,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using BackendForChat.Services;
+using BackendForChat.Models.DTO;
+using BackendForChat.Models.DatabaseContext;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BackendForChat.Controllers
 {
@@ -30,7 +33,7 @@ namespace BackendForChat.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             if (await _userService.UserExistsAsync(model.Username))
             {
@@ -43,13 +46,13 @@ namespace BackendForChat.Controllers
                 PasswordHash = passwordHasher.HashPassword(null, model.Password)
             };
 
-            int newUserId = await _userService.CreateUserAsync(user);
+            Guid newUserId = await _userService.CreateUserAsync(user);
 
             return CreatedAtAction(nameof(GetUserById), new { id = newUserId }, new { user.Id, user.Username });
         }
 
         [HttpGet("users/{id}")]
-        public async Task<IActionResult> GetUserById(int id)
+        public async Task<IActionResult> GetUserById(Guid id)
         {
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
@@ -60,7 +63,7 @@ namespace BackendForChat.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             Debug.WriteLine("Acces try");
             var (success, errorMessage, token) = await _authService.AuthenticateUserAsync(model.Username, model.Password);
@@ -69,6 +72,7 @@ namespace BackendForChat.Controllers
             {
                 return Unauthorized(new { message = errorMessage });
             } 
+
             return Ok(new { token });
         }
 

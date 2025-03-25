@@ -1,4 +1,4 @@
-﻿using BackendForChat.Models;
+﻿using BackendForChat.Models.DTO;
 using BackendForChat.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -15,23 +15,26 @@ namespace BackendForChat.Hubs
         {
             _messageService = messageService;
         }
-        public override async Task OnConnectedAsync()
-        {
-            string user = Context.User.Identity.Name;
-            await Clients.All.SendAsync("SystemMessage", $"User {user} - connected to chat");
-        }
-        public async Task SendMessage(NewMessageModel model)
+        //public override async Task OnConnectedAsync()
+        //{
+        //    string user = Context.User.Identity.Name;
+        //    //await Clients.All.SendAsync("SystemMessage", $"User {user} - connected to chat");
+        //    RequestMessageDto messageModel = new RequestMessageDto() {Content = $"User {user} - connected to chat" };
+        //    var message = await _messageService.SaveMessageAsync(messageModel, 9);
+        //    await Clients.All.SendAsync("ReceiveMessage", new
+        //    {
+        //        message.Id,
+        //        Content = messageModel.Content, // Отправляем клиенту уже расшифрованное сообщение
+        //        message.SenderId,
+        //        message.CreatedAt
+        //    });
+        //}
+        public async Task SendMessage(RequestMessageDto model)
         {
             var userIdClaim = Context.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(userIdClaim.Value);
+            Guid userId = Guid.Parse(userIdClaim.Value);
             var message = await _messageService.SaveMessageAsync(model, userId);
-            await Clients.All.SendAsync("ReceiveMessage", new
-            {
-                message.Id,
-                Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
-                message.UserId,
-                message.CreatedAt
-            });
+            await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }
 }

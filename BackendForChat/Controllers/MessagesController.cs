@@ -1,5 +1,5 @@
 ﻿using BackendForChat.Hubs;
-using BackendForChat.Models;
+using BackendForChat.Models.DTO;
 using BackendForChat.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,35 +24,6 @@ namespace BackendForChat.Controllers
             _messageService = messageService;
         }
 
-        //[Authorize]
-        //[HttpGet]
-        //public async Task<IActionResult> GetMessages()
-        //{
-        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        //    if (userIdClaim == null)
-        //    {
-        //        return Unauthorized("User not authenticated");
-        //    }
-        //    int userId = int.Parse(userIdClaim.Value);
-
-        //    var encryptedMessages = await _context.Messages.Where(x => x.UserId == userId).ToListAsync();
-
-        //    if (encryptedMessages == null || encryptedMessages.Count == 0)
-        //    {
-        //        return NotFound("No messages");
-        //    }
-
-        //    var decryptedMessages = encryptedMessages.Select(message => new
-        //    {
-        //        message.Id,
-        //        Content = _encryptionService.Decrypt(message.Content),
-        //        message.UserId,
-        //        message.CreatedAt
-        //    });
-
-        //    return Ok(decryptedMessages);
-        //}
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMessageById(int id)
         {
@@ -66,7 +37,7 @@ namespace BackendForChat.Controllers
             {
                 message.Id,
                 Content = _encryptionService.Decrypt(message.Content),
-                message.UserId,
+                message.SenderId,
                 message.CreatedAt
             });
         }
@@ -83,7 +54,7 @@ namespace BackendForChat.Controllers
             {
                 message.Id,
                 Content = _encryptionService.Decrypt(message.Content),
-                message.UserId,
+                message.SenderId,
                 message.CreatedAt
             });
 
@@ -91,9 +62,10 @@ namespace BackendForChat.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMessage([FromBody] NewMessageModel model)
+        public async Task<IActionResult> PostMessage([FromBody] RequestMessageDto model)
         {
-            if (model == null || string.IsNullOrEmpty(model.Content))
+            if (model == null || string.IsNullOrEmpty(model.Content) || string.IsNullOrWhiteSpace(model.ChatId.ToString())
+                || Guid.TryParse(model.ChatId.ToString(), out Guid chatId) && chatId == Guid.Empty)
             {
                 return BadRequest("Invalid message data.");
             }
@@ -103,25 +75,13 @@ namespace BackendForChat.Controllers
             {
                 return Unauthorized("User not authenticated");
             }
-            int userId = int.Parse(userIdClaim.Value);
+            Guid userId = Guid.Parse(userIdClaim.Value);
 
-            var message = await _messageService.SaveMessageAsync(model, userId);
+            ResponseMessageDto message = await _messageService.SaveMessageAsync(model, userId);
 
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", new
-            {
-                message.Id,
-                Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
-                message.UserId,
-                message.CreatedAt
-            });
+            await _hubContext.Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", message);
 
-            return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, new
-            {
-                message.Id,
-                Content = model.Content, // Отправляем клиенту уже расшифрованное сообщение
-                message.UserId,
-                message.CreatedAt
-            });
+            return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, message);
         }
     }
 }

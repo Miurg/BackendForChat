@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Serialization;
+using BackendForChat.Models.DatabaseContext;
+using BackendForChat.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 builder.Services.AddScoped<MessageService>();
+builder.Services.AddScoped<ChatService>();
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 builder.WebHost.UseKestrel(options =>
 {
@@ -69,9 +72,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.MapHub<MessageHub>("/messageHub");
-}
 
+}
+app.UseMiddleware<ValidateUserMiddleware>();
+app.MapHub<MessageHub>("/messageHub");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

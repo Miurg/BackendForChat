@@ -1,4 +1,7 @@
 ﻿using BackendForChat.Models;
+using BackendForChat.Models.DatabaseContext;
+using BackendForChat.Models.DTO;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,18 +32,27 @@ namespace BackendForChat.Services
             return messages;
         }
 
-        public async Task<MessageModel> SaveMessageAsync(NewMessageModel newMessage, int userId)
+        public async Task<ResponseMessageDto> SaveMessageAsync(RequestMessageDto newMessage, Guid userId)
         {
+
             MessageModel message = new MessageModel
             {
+                ChatId = newMessage.ChatId,
                 Content = _encryptionService.Encrypt(newMessage.Content),
-                UserId = userId,
+                SenderId = userId,
                 CreatedAt = DateTime.UtcNow
             };
-
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
-            return message;
+            ResponseMessageDto responseMessage = new ResponseMessageDto
+            {
+                Id = message.Id,
+                ChatId = newMessage.ChatId,
+                Content = newMessage.Content, //Return decrypted
+                SenderId = userId,
+                CreatedAt = message.CreatedAt
+            };
+            return responseMessage;
         }
     }
 }

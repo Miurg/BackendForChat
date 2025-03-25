@@ -16,7 +16,7 @@ namespace BackendForChat.Services
             {
                 _key = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
             }
-            _iv = new byte[16]; // 16-байтовый вектор инициализации (IV) (нулевой)
+            _iv = new byte[16]; // 16-byte initialization vector (IV) (zero)
         }
 
         public string Encrypt(string plainText)

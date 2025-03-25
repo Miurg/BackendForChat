@@ -33,6 +33,7 @@ namespace BackendForChat.Services
                 expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: creds);
 
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
