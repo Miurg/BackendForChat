@@ -1,5 +1,5 @@
-﻿using BackendForChat.Models;
-using BackendForChat.Services;
+﻿using BackendForChat.Application.Services;
+using BackendForChat.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,12 +27,8 @@ namespace BackendForChat.Controllers
             {
                 return NotFound("User not found");
             }
-            return Ok(new
-            {
-                id = user.Id,
-                Username = user.Username
-            }
-            );
+            return Ok(user);
         }
+
     }
 }

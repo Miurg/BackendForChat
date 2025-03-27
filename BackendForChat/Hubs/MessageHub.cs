@@ -1,5 +1,5 @@
-﻿using BackendForChat.Models.DTO;
-using BackendForChat.Services;
+﻿using BackendForChat.Application.Services;
+using BackendForChat.Models.DTO.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;

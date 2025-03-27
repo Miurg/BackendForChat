@@ -1,11 +1,12 @@
-﻿using BackendForChat.Models;
-using BackendForChat.Models.DatabaseContext;
-using BackendForChat.Models.DTO;
+﻿using BackendForChat.Models.DatabaseContext;
+using BackendForChat.Models.DTO.Requests;
+using BackendForChat.Models.DTO.Response;
+using BackendForChat.Models.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BackendForChat.Services
+namespace BackendForChat.Application.Services
 {
     public class MessageService
     {

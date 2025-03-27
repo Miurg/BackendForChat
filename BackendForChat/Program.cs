@@ -1,6 +1,4 @@
 using BackendForChat.Hubs;
-using BackendForChat.Models;
-using BackendForChat.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
@@ -14,6 +12,8 @@ using System.Text;
 using Newtonsoft.Json.Serialization;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Middleware;
+using BackendForChat.Application.Services;
+using BackendForChat.Models.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,11 +45,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
+
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
+builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
+
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();  
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
@@ -75,6 +77,7 @@ if (app.Environment.IsDevelopment())
 
 }
 app.UseMiddleware<ValidateUserMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapHub<MessageHub>("/messageHub");
 app.UseHttpsRedirection();
 

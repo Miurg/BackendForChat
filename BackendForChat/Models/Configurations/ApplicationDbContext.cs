@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using System;
 using System.Reflection;
+using BackendForChat.Models.Entities;
 
 namespace BackendForChat.Models.DatabaseContext
 {

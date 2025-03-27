@@ -1,8 +1,8 @@
-﻿using BackendForChat.Models;
-using BackendForChat.Models.DatabaseContext;
+﻿using BackendForChat.Models.DatabaseContext;
+using BackendForChat.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace BackendForChat.Services
+namespace BackendForChat.Application.Services
 {
     public class UserService
     {
@@ -13,20 +13,17 @@ namespace BackendForChat.Services
             _context = context;
         }
 
-        public async Task<UserModel?> GetUserByIdAsync(Guid id)
+        public async Task<UserModel> GetUserByIdAsync(Guid id)
         {
             return await _context.Users.FindAsync(id);
         }
-
-        public async Task<bool> UserExistsAsync(string username)
+        public async Task<bool> UserExistsByNameAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.Username == username);
         }
-        public async Task<Guid> CreateUserAsync(UserModel user)
+        public async Task<bool> UserExistByGuidAsync(Guid Id)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user.Id; 
+            return await _context.Users.AnyAsync(u => u.Id == Id);
         }
     }
 }

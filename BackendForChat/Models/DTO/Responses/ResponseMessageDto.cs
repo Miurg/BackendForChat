@@ -1,6 +1,6 @@
 ﻿using BackendForChat.Services;
 
-namespace BackendForChat.Models.DTO
+namespace BackendForChat.Models.DTO.Response
 {
     public class ResponseMessageDto
     {

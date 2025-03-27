@@ -1,4 +1,4 @@
-﻿namespace BackendForChat.Models
+﻿namespace BackendForChat.Models.Entities
 {
     public class ChatTypeModel
     {

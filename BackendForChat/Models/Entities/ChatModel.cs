@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BackendForChat.Models
+namespace BackendForChat.Models.Entities
 {
     public class ChatModel
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace BackendForChat.Models
+namespace BackendForChat.Models.Entities
 {
     public class ChatUserModel
     {

@@ -1,17 +1,9 @@
-﻿using BackendForChat.Models;
-using BackendForChat.Controllers;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using BackendForChat.Services;
-using BackendForChat.Models.DTO;
-using BackendForChat.Models.DatabaseContext;
-using Microsoft.AspNetCore.Authorization;
+using BackendForChat.Application.Common;
+using BackendForChat.Application.Services;
+using BackendForChat.Models.DTO.Requests;
+using BackendForChat.Models.DTO.Response;
 
 namespace BackendForChat.Controllers
 {
@@ -19,36 +11,25 @@ namespace BackendForChat.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
         private readonly UserService _userService;
         private readonly AuthService _authService;
-        PasswordHasher<UserModel> passwordHasher = new PasswordHasher<UserModel>();
-        public AuthController(ApplicationDbContext context, IConfiguration configuration, UserService userService, AuthService authService)
+        public AuthController(UserService userService, AuthService authService)
         {
-            _context = context;
-            _configuration = configuration;
             _userService = userService;
             _authService = authService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RequestRegisterDto requestRegister)
         {
-            if (await _userService.UserExistsAsync(model.Username))
+            if (await _userService.UserExistsByNameAsync(requestRegister.Username))
             {
                 return BadRequest("User already exists");
             }
 
-            var user = new UserModel
-            {
-                Username = model.Username,
-                PasswordHash = passwordHasher.HashPassword(null, model.Password)
-            };
+            ServiceResult<ResponseRegisterDto> responseRegister = await _authService.RegisterAsync(requestRegister);
 
-            Guid newUserId = await _userService.CreateUserAsync(user);
-
-            return CreatedAtAction(nameof(GetUserById), new { id = newUserId }, new { user.Id, user.Username });
+            return CreatedAtAction(nameof(GetUserById), new { id = responseRegister.Data.Id }, responseRegister.Data);
         }
 
         [HttpGet("users/{id}")]
@@ -63,17 +44,17 @@ namespace BackendForChat.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        public async Task<IActionResult> Login([FromBody] RequestLoginDto requestLogin)
         {
             Debug.WriteLine("Acces try");
-            var (success, errorMessage, token) = await _authService.AuthenticateUserAsync(model.Username, model.Password);
+            ServiceResult<ResponseLoginDto> responseLogin = await _authService.AuthenticateUserAsync(requestLogin);
 
-            if (!success)
+            if (!responseLogin.Success)
             {
-                return Unauthorized(new { message = errorMessage });
+                return Unauthorized(new { message = responseLogin.ErrorMessage });
             } 
 
-            return Ok(new { token });
+            return Ok(responseLogin.Data);
         }
 
     }

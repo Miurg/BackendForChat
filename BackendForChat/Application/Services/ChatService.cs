@@ -1,10 +1,10 @@
-﻿using BackendForChat.Models;
+﻿using BackendForChat.Application.Common;
 using BackendForChat.Models.DatabaseContext;
-using BackendForChat.Models.DTO;
+using BackendForChat.Models.DTO.Response;
+using BackendForChat.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
-namespace BackendForChat.Services
+namespace BackendForChat.Application.Services
 {
     public class ChatService
     {
@@ -14,7 +14,7 @@ namespace BackendForChat.Services
         {
             _context = context;
         }
-        public async Task<ResponseChatCreateDto> FindPrivateChatByUsersAsync (Guid firtsUserId, Guid secondUserId)
+        public async Task<ServiceResult<ResponseChatCreateDto>> FindPrivateChatByUsersAsync (Guid firtsUserId, Guid secondUserId)
         {
             var chatType = await _context.ChatTypes
                 .FirstOrDefaultAsync(ct => ct.Type == "Private");
@@ -29,12 +29,12 @@ namespace BackendForChat.Services
                       chat.ChatUsers.Any(uc => uc.UserId == secondUserId))
                 .FirstOrDefaultAsync();
             if (chat == null)
-                return null;
-            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { Id = chat.Id };
-            return chatResponse;
+                return ServiceResult<ResponseChatCreateDto>.Fail("Chat does not exist");
+            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
+            return ServiceResult<ResponseChatCreateDto>.Ok(chatResponse);
         }
 
-        public async Task<ResponseChatCreateDto> CreatePrivateChatAsync(Guid firtsUserId, Guid secondUserId)
+        public async Task<ServiceResult<ResponseChatCreateDto>> CreatePrivateChatAsync(Guid firtsUserId, Guid secondUserId)
         {
             var chatType = await _context.ChatTypes
                 .FirstOrDefaultAsync(ct => ct.Type == "Private"); 
@@ -66,8 +66,9 @@ namespace BackendForChat.Services
 
             _context.Chats.Add(chat);
             await _context.SaveChangesAsync();
-            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { Id = chat.Id };
-            return chatResponse;
+            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
+            return ServiceResult<ResponseChatCreateDto>.Ok(chatResponse);
+        }
         }
 
         public async Task<ResponseChatCreateDto> CreateGroupChatAsync(List<Guid> userIds)
@@ -96,14 +97,14 @@ namespace BackendForChat.Services
 
             _context.Chats.Add(chat);
             await _context.SaveChangesAsync();
-            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { Id = chat.Id };
+            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
             return chatResponse;
         }
 
         public async Task<ResponseChatCreateDto> GetChatById(Guid id)
         {
             var chat = await _context.Chats.FindAsync(id);
-            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { Id = chat.Id };
+            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
             return chatResponse;
         }
 

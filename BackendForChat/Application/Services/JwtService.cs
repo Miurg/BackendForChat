@@ -1,10 +1,10 @@
-﻿using BackendForChat.Models;
+﻿using BackendForChat.Models.Entities;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace BackendForChat.Services
+namespace BackendForChat.Application.Services
 {
     public class JwtService
     {

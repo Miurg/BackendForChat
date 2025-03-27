@@ -1,6 +1,7 @@
-﻿using BackendForChat.Hubs;
-using BackendForChat.Models.DTO;
-using BackendForChat.Services;
+﻿using BackendForChat.Application.Services;
+using BackendForChat.Hubs;
+using BackendForChat.Models.DTO.Requests;
+using BackendForChat.Models.DTO.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
