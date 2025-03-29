@@ -25,64 +25,72 @@ namespace BackendForChat.Controllers
             _messageService = messageService;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetMessageById(int id)
         {
-            var message = await _messageService.GetMessageById(id);
-            if (message == null)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
             {
-                return NotFound();
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            var message = await _messageService.GetMessageById(id, userId);
+            if (!message.Success)
+            {
+                return NotFound(new { error = message.ErrorMessage });
             }
 
-            return Ok(new
-            {
-                message.Id,
-                Content = _encryptionService.Decrypt(message.Content),
-                message.SenderId,
-                message.CreatedAt
-            });
+            return Ok(message.Data);
         }
 
-        [HttpGet("paged")]
-        public async Task<IActionResult> GetMessagesPaged(int page = 1, int pageSize = 50)
+        [HttpGet("paged/{chatId:guid}")]
+        public async Task<IActionResult> GetMessagesPaged(Guid chatId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            if (pageSize > 100) pageSize = 100; 
-            if (page < 1) page = 1; 
+            if (pageSize > 100 || pageSize < 1) pageSize = 100; 
+            if (page < 1) page = 1;
 
-            var messages = await _messageService.GetMessagesPaged(page, pageSize);
-
-            var decryptedMessages = messages.Select(message => new
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
             {
-                message.Id,
-                Content = _encryptionService.Decrypt(message.Content),
-                message.SenderId,
-                message.CreatedAt
-            });
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            Guid userId = Guid.Parse(userIdClaim.Value);
 
-            return Ok(decryptedMessages);
+            var messages = await _messageService.GetMessagesPaged(page, pageSize, userId, chatId);
+
+            if (!messages.Success)
+            {
+                return NotFound(new { error = messages.ErrorMessage });
+            }
+
+            return Ok(messages.Data);
         }
 
         [HttpPost]
         public async Task<IActionResult> PostMessage([FromBody] RequestMessageDto model)
         {
-            if (model == null || string.IsNullOrEmpty(model.Content) || string.IsNullOrWhiteSpace(model.ChatId.ToString())
-                || Guid.TryParse(model.ChatId.ToString(), out Guid chatId) && chatId == Guid.Empty)
+            if (model == null || string.IsNullOrWhiteSpace(model.Content) || model.ChatId == Guid.Empty)
             {
-                return BadRequest("Invalid message data.");
+                
+                return BadRequest(new { message = "Invalid message data." });
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
             {
-                return Unauthorized("User not authenticated");
+                return Unauthorized(new { message = "User not authenticated" });
             }
             Guid userId = Guid.Parse(userIdClaim.Value);
 
-            ResponseMessageDto message = await _messageService.SaveMessageAsync(model, userId);
+            var message = await _messageService.SaveMessageAsync(model, userId);
+            if (!message.Success)
+            {
+                return BadRequest(new { error = message.ErrorMessage });
+            }
 
-            await _hubContext.Clients.Group(message.ChatId.ToString()).SendAsync("ReceiveMessage", message);
+            await _hubContext.Clients.Group(message.Data.ChatId.ToString()).SendAsync("ReceiveMessage", message.Data);
 
-            return CreatedAtAction(nameof(GetMessageById), new { id = message.Id }, message);
+            return CreatedAtAction(nameof(GetMessageById), new { id = message.Data.Id }, message.Data);
         }
     }
 }

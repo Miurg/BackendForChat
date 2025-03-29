@@ -35,32 +35,32 @@ namespace BackendForChat.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
 
-            ServiceResult<ResponseChatCreateDto> chat = await _сhatService.FindPrivateChatByUsersAsync(userId, chatRequest.userId);
+            var chat = await _сhatService.FindPrivateChatByUsersAsync(userId, chatRequest.userId);
 
-            if (chat.Success == true)
+            if (chat.Success)
             {
-                return Ok(chat); 
+                return Ok(chat.Data); 
             }
 
             chat = await _сhatService.CreatePrivateChatAsync(userId, chatRequest.userId);
-            if (chat.Success == false)
+            if (!chat.Success)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            return CreatedAtAction(nameof(GetChatById),new { id = chat.Data.ChatId },chat);
+            return CreatedAtAction(nameof(GetChatById),new { id = chat.Data.ChatId },chat.Data);
             
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetChatById(Guid id)
         {
-            ResponseChatCreateDto chat = await _сhatService.GetChatById(id);
+            var chat = await _сhatService.GetChatById(id);
 
-            if (chat == null)
+            if (!chat.Success)
             {
-                return NotFound();
+                return NotFound(chat.ErrorMessage);
             }
 
-            return Ok(chat);
+            return Ok(chat.Data);
         }
     }
 }
