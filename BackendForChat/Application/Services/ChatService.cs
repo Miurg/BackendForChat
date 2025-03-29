@@ -29,7 +29,7 @@ namespace BackendForChat.Application.Services
                       chat.ChatUsers.Any(uc => uc.UserId == secondUserId))
                 .FirstOrDefaultAsync();
             if (chat == null)
-                return ServiceResult<ResponseChatCreateDto>.Fail("Chat does not exist");
+                return ServiceResult<ResponseChatCreateDto>.Fail("Chat with this user does not exist");
             ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
             return ServiceResult<ResponseChatCreateDto>.Ok(chatResponse);
         }
@@ -69,43 +69,47 @@ namespace BackendForChat.Application.Services
             ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
             return ServiceResult<ResponseChatCreateDto>.Ok(chatResponse);
         }
-        }
+        
 
-        public async Task<ResponseChatCreateDto> CreateGroupChatAsync(List<Guid> userIds)
-        {
-            var chatType = await _context.ChatTypes
-                .FirstOrDefaultAsync(ct => ct.Type == "Group");
+        //public async Task<ResponseChatCreateDto> CreateGroupChatAsync(List<Guid> userIds)
+        //{
+        //    var chatType = await _context.ChatTypes
+        //        .FirstOrDefaultAsync(ct => ct.Type == "Group");
 
-            if (chatType == null)
-            {
-                throw new Exception("Chat type not found");
-            }
+        //    if (chatType == null)
+        //    {
+        //        throw new Exception("Chat type not found");
+        //    }
 
-            var chat = new ChatModel
-            {
-                ChatTypeId = chatType.Id,
-                ChatType = chatType
-            };
+        //    var chat = new ChatModel
+        //    {
+        //        ChatTypeId = chatType.Id,
+        //        ChatType = chatType
+        //    };
 
-            var chatUsers = userIds.Select(userId => new ChatUserModel
-            {
-                UserId = userId,
-                Chat = chat
-            }).ToList();
+        //    var chatUsers = userIds.Select(userId => new ChatUserModel
+        //    {
+        //        UserId = userId,
+        //        Chat = chat
+        //    }).ToList();
 
-            chat.ChatUsers = chatUsers;
+        //    chat.ChatUsers = chatUsers;
 
-            _context.Chats.Add(chat);
-            await _context.SaveChangesAsync();
-            ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
-            return chatResponse;
-        }
+        //    _context.Chats.Add(chat);
+        //    await _context.SaveChangesAsync();
+        //    ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
+        //    return chatResponse;
+        //}
 
-        public async Task<ResponseChatCreateDto> GetChatById(Guid id)
+        public async Task<ServiceResult<ResponseChatCreateDto>> GetChatById(Guid id)
         {
             var chat = await _context.Chats.FindAsync(id);
+            if (chat == null)
+            {
+                return ServiceResult<ResponseChatCreateDto>.Fail("Chat with that id does not exist");
+            }
             ResponseChatCreateDto chatResponse = new ResponseChatCreateDto { ChatId = chat.Id };
-            return chatResponse;
+            return ServiceResult<ResponseChatCreateDto>.Ok(chatResponse);
         }
 
     }
