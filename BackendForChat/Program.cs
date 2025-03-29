@@ -60,7 +60,7 @@ builder.WebHost.UseKestrel(options =>
     options.Listen(IPAddress.Any, 5001); // HTTP
     options.Listen(IPAddress.Any, 7168, listenOptions =>
     {
-        listenOptions.UseHttps("F:\\cert.pfx", "saymyname");
+        listenOptions.UseHttps(builder.Configuration["HTTPS:CertPath"], builder.Configuration["HTTPS:CertName"]);
     });
 });
 
