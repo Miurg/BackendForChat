@@ -1,10 +1,8 @@
-﻿using BackendForChat.Application.Services;
-using BackendForChat.Models;
+﻿using BackendForChat.Application.Queries.Users;
+using BackendForChat.Application.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace BackendForChat.Controllers
 {
@@ -13,16 +11,16 @@ namespace BackendForChat.Controllers
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
-        private readonly UserService _userService;
-        public UsersController(UserService userService) 
+        private readonly IMediator _mediator;
+        public UsersController(IMediator mediator) 
         {
-            _userService = userService;
+            _mediator = mediator;
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
+            var user = await _mediator.Send(new GetUserByIdQuery(id));
             if (user == null)
             {
                 return NotFound("User not found");

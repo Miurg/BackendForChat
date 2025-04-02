@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BackendForChat.Models.DTO.Requests
+namespace BackendForChat.Application.DTO.Requests
 {
-    public class RequestRegisterDto
+    public class RequestLoginDto
     {
         [Required]
         public string Username { get; set; }

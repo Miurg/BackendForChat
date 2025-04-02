@@ -1,14 +1,11 @@
-﻿using BackendForChat.Application.Common;
+﻿using BackendForChat.Application.Commands.Chats;
+using BackendForChat.Application.DTO.Requests;
+using BackendForChat.Application.Queries.Chats;
+using BackendForChat.Application.Queries.Users;
 using BackendForChat.Application.Services;
-using BackendForChat.Hubs;
-using BackendForChat.Models;
-using BackendForChat.Models.DTO.Requests;
-using BackendForChat.Models.DTO.Response;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace BackendForChat.Controllers
@@ -18,31 +15,29 @@ namespace BackendForChat.Controllers
     [Authorize]
     public class ChatsController : Controller
     {
-        private readonly ChatService _сhatService;
-        private readonly UserService _userService;
-        public ChatsController(ChatService chatService, UserService userService)
+        private readonly IMediator _mediator;
+        public ChatsController(IMediator mediator)
         {
-            _сhatService = chatService;
-            _userService = userService;
+            _mediator = mediator;
         }
         [HttpPost("get-or-create")]
         public async Task<IActionResult> GetOrCreatePrivateChatAsync([FromBody] RequestChatPrivateCreateDto chatRequest)
         {
-            if (!(await _userService.UserExistByGuidAsync(chatRequest.userId)))
+            if (!(await _mediator.Send(new UserExistByGuidQuery(chatRequest.userId))))
             {
-                return BadRequest("User already exists");
+                return BadRequest(new { error = "User already exists" });
             }
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
 
-            var chat = await _сhatService.FindPrivateChatByUsersAsync(userId, chatRequest.userId);
+            var chat = await _mediator.Send(new FindPrivateChatByUsersQuery(userId,chatRequest.userId));
 
             if (chat.Success)
             {
                 return Ok(chat.Data); 
             }
 
-            chat = await _сhatService.CreatePrivateChatAsync(userId, chatRequest.userId);
+            chat = await _mediator.Send(new CreatePrivateChatCommand(userId, chatRequest.userId));
             if (!chat.Success)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
@@ -53,7 +48,7 @@ namespace BackendForChat.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetChatById(Guid id)
         {
-            var chat = await _сhatService.GetChatById(id);
+            var chat = await _mediator.Send(new GetChatByIdQuery(id));
 
             if (!chat.Success)
             {

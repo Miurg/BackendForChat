@@ -1,5 +1,7 @@
-﻿using BackendForChat.Application.Services;
-using BackendForChat.Models.DTO.Requests;
+﻿using BackendForChat.Application.Commands.Messages;
+using BackendForChat.Application.DTO.Requests;
+using BackendForChat.Application.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
@@ -10,10 +12,10 @@ namespace BackendForChat.Hubs
     [Authorize]
     public class MessageHub : Hub
     {
-        private readonly MessageService _messageService;
-        public MessageHub(MessageService messageService) 
+        private readonly IMediator _mediator;
+        public MessageHub(IMediator mediator) 
         {
-            _messageService = messageService;
+            _mediator = mediator;
         }
         //public override async Task OnConnectedAsync()
         //{
@@ -33,7 +35,7 @@ namespace BackendForChat.Hubs
         {
             var userIdClaim = Context.User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
-            var message = await _messageService.SaveMessageAsync(model, userId);
+            var message = await _mediator.Send(new SaveMessageCommand(model,userId));
             await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }

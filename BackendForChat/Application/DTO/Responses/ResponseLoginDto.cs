@@ -1,4 +1,4 @@
-﻿namespace BackendForChat.Models.DTO.Response
+﻿namespace BackendForChat.Application.DTO.Responses
 {
     public class ResponseLoginDto
     {

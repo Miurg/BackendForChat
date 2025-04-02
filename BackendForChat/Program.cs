@@ -1,19 +1,15 @@
 using BackendForChat.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using System.Net;
 using System.Text;
-using Newtonsoft.Json.Serialization;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Middleware;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.Entities;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,11 +45,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<AuthService>();  
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<MessageService>();
-builder.Services.AddScoped<ChatService>();
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 builder.WebHost.UseKestrel(options =>
 {
@@ -64,7 +56,7 @@ builder.WebHost.UseKestrel(options =>
     });
 });
 
-
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
 
 var app = builder.Build();
 

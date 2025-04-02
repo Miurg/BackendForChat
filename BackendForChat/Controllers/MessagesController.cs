@@ -1,11 +1,12 @@
-﻿using BackendForChat.Application.Services;
+﻿using BackendForChat.Application.Commands.Messages;
+using BackendForChat.Application.DTO.Requests;
+using BackendForChat.Application.Queries.Messages;
+using BackendForChat.Application.Services;
 using BackendForChat.Hubs;
-using BackendForChat.Models.DTO.Requests;
-using BackendForChat.Models.DTO.Response;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace BackendForChat.Controllers
@@ -15,14 +16,12 @@ namespace BackendForChat.Controllers
     [Authorize]
     public class MessagesController : ControllerBase
     {
-        private readonly EncryptionService _encryptionService;
+        private readonly IMediator _mediator;
         private readonly IHubContext<MessageHub> _hubContext;
-        private readonly MessageService _messageService;
-        public MessagesController(EncryptionService encryptionService, IHubContext<MessageHub> hubContext, MessageService messageService)
+        public MessagesController(IHubContext<MessageHub> hubContext, IMediator mediator)
         {
-            _encryptionService = encryptionService;
+            _mediator = mediator;
             _hubContext = hubContext;
-            _messageService = messageService;
         }
 
         [HttpGet("{id:int}")]
@@ -34,7 +33,7 @@ namespace BackendForChat.Controllers
                 return Unauthorized(new { message = "User not authenticated" });
             }
             Guid userId = Guid.Parse(userIdClaim.Value);
-            var message = await _messageService.GetMessageById(id, userId);
+            var message = await _mediator.Send(new GetMessageByIdQuery(id, userId));
             if (!message.Success)
             {
                 return NotFound(new { error = message.ErrorMessage });
@@ -56,7 +55,7 @@ namespace BackendForChat.Controllers
             }
             Guid userId = Guid.Parse(userIdClaim.Value);
 
-            var messages = await _messageService.GetMessagesPaged(page, pageSize, userId, chatId);
+            var messages = await _mediator.Send(new GetMessagesPagedQuery(page, pageSize, userId, chatId));
 
             if (!messages.Success)
             {
@@ -82,7 +81,7 @@ namespace BackendForChat.Controllers
             }
             Guid userId = Guid.Parse(userIdClaim.Value);
 
-            var message = await _messageService.SaveMessageAsync(model, userId);
+            var message = await _mediator.Send(new SaveMessageCommand(model, userId));
             if (!message.Success)
             {
                 return BadRequest(new { error = message.ErrorMessage });
