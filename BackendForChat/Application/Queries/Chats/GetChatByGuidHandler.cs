@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BackendForChat.Application.Queries.Chats
 {
-    public class GetChatByIdHandler : IRequestHandler<GetChatByIdQuery, ServiceResult<ResponseChatCreateDto>>
+    public class GetChatByGuidHandler : IRequestHandler<GetChatByGuidQuery, ServiceResult<ResponseChatCreateDto>>
     {
         private readonly ApplicationDbContext _context;
-        public GetChatByIdHandler(ApplicationDbContext context)
+        public GetChatByGuidHandler(ApplicationDbContext context)
         {
             _context = context;
         }
-        public async Task<ServiceResult<ResponseChatCreateDto>> Handle(GetChatByIdQuery request, CancellationToken cancellationToken)
+        public async Task<ServiceResult<ResponseChatCreateDto>> Handle(GetChatByGuidQuery request, CancellationToken cancellationToken)
         {
             var chat = await _context.Chats.FindAsync(request.id, cancellationToken);
             if (chat == null)

@@ -38,7 +38,7 @@ namespace BackendForChat.Controllers
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
-            var user = await _mediator.Send(new GetUserByIdQuery(id));
+            var user = await _mediator.Send(new GetUserByGuidQuery(id));
             if (user == null)
             {
                 return NotFound("User not found");

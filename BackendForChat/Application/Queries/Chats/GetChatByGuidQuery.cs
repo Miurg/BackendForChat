@@ -4,5 +4,5 @@ using MediatR;
 
 namespace BackendForChat.Application.Queries.Chats
 {
-    public record GetChatByIdQuery(Guid id) : IRequest<ServiceResult<ResponseChatCreateDto>>;
+    public record GetChatByGuidQuery(Guid id) : IRequest<ServiceResult<ResponseChatCreateDto>>;
 }

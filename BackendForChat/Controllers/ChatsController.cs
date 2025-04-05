@@ -48,7 +48,7 @@ namespace BackendForChat.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetChatById(Guid id)
         {
-            var chat = await _mediator.Send(new GetChatByIdQuery(id));
+            var chat = await _mediator.Send(new GetChatByGuidQuery(id));
 
             if (!chat.Success)
             {
