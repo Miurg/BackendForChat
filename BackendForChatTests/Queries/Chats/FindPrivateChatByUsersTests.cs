@@ -61,7 +61,7 @@ namespace BackendForChatTests.Queries.Chats
             _handler = new FindPrivateChatByUsersHandler(_context);
         }
         [Test]
-        public async Task FindPrivateChatByUsers_Should_ReturnSuccessResultAndChatId_WhenChatAndUsersExists()
+        public async Task FindPrivateChatByUsers_ShouldReturn_SuccessResultAndChatId_WhenChatAndUsersExists()
         {
             var query = new FindPrivateChatByUsersQuery(_user1Id, _user2Id);
 
@@ -71,7 +71,7 @@ namespace BackendForChatTests.Queries.Chats
             Assert.That(result.Data.ChatId, Is.EqualTo(_chatId));
         }
         [Test]
-        public async Task FindPrivateChatByUsers_Should_ReturnFailResultAndErrorMessage_WhenChatNotExist()
+        public async Task FindPrivateChatByUsers_ShouldReturn_FailResultAndErrorMessage_WhenChatNotExist()
         {
             var query = new FindPrivateChatByUsersQuery(_user1Id, _user3Id);
 
