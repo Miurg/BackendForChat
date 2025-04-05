@@ -10,6 +10,7 @@ using BackendForChat.Middleware;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.Entities;
 using System.Reflection;
+using BackendForChat.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 builder.WebHost.UseKestrel(options =>

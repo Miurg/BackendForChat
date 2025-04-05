@@ -1,6 +1,7 @@
 ﻿using BackendForChat.Application.Commands.Auth;
 using BackendForChat.Application.Common;
 using BackendForChat.Application.DTO.Responses;
+using BackendForChat.Application.Interfaces;
 using BackendForChat.Application.Queries.Chats;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.DatabaseContext;
@@ -15,8 +16,8 @@ namespace BackendForChat.Application.Queries.Auth
     {
         private readonly ApplicationDbContext _context;
         private readonly IPasswordHasher<UserModel> _passwordHasher;
-        private readonly JwtService _jwtService;
-        public LoginHandler(ApplicationDbContext context, IPasswordHasher<UserModel> passwordHasher, JwtService jwtService)
+        private readonly IJwtService _jwtService;
+        public LoginHandler(ApplicationDbContext context, IPasswordHasher<UserModel> passwordHasher, IJwtService jwtService)
         {
             _context = context;
             _passwordHasher = passwordHasher;

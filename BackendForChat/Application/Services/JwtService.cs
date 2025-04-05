@@ -1,4 +1,5 @@
-﻿using BackendForChat.Models.Entities;
+﻿using BackendForChat.Application.Interfaces;
+using BackendForChat.Models.Entities;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace BackendForChat.Application.Services
 {
-    public class JwtService
+    public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
 
