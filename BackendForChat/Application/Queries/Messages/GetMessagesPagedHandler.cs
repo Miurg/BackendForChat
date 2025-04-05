@@ -1,5 +1,6 @@
 ﻿using BackendForChat.Application.Common;
 using BackendForChat.Application.DTO.Responses;
+using BackendForChat.Application.Interfaces;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.DatabaseContext;
 using MediatR;
@@ -10,8 +11,8 @@ namespace BackendForChat.Application.Queries.Messages
     public class GetMessagesPagedHandler : IRequestHandler<GetMessagesPagedQuery, ServiceResult<List<ResponseMessageDto>>>
     {
         private readonly ApplicationDbContext _context;
-        private readonly EncryptionService _encryptionService;
-        public GetMessagesPagedHandler(ApplicationDbContext context, EncryptionService encryptionService)
+        private readonly IEncryptionService _encryptionService;
+        public GetMessagesPagedHandler(ApplicationDbContext context, IEncryptionService encryptionService)
         {
             _context = context;
             _encryptionService = encryptionService;

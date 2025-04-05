@@ -44,6 +44,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton(new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
+builder.Services.AddSingleton<IEncryptionService>(provider =>
+        new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 
 builder.Services.AddScoped<IJwtService, JwtService>();

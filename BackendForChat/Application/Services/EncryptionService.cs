@@ -1,11 +1,12 @@
-﻿using System;
+﻿using BackendForChat.Application.Interfaces;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace BackendForChat.Application.Services
 {
-    public class EncryptionService
+    public class EncryptionService : IEncryptionService
     {
         private readonly byte[] _key;
         private readonly byte[] _iv;

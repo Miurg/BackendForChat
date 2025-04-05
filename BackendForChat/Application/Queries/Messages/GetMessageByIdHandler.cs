@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using BackendForChat.Application.Common;
 using BackendForChat.Application.DTO.Responses;
+using BackendForChat.Application.Interfaces;
 using BackendForChat.Application.Queries.Chats;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.DatabaseContext;
@@ -12,8 +13,8 @@ namespace BackendForChat.Application.Queries.Messages
     public class GetMessageByIdHandler : IRequestHandler<GetMessageByIdQuery, ServiceResult<ResponseMessageDto>>
     {
         private readonly ApplicationDbContext _context;
-        private readonly EncryptionService _encryptionService;
-        public GetMessageByIdHandler(ApplicationDbContext context, EncryptionService encryptionService)
+        private readonly IEncryptionService _encryptionService;
+        public GetMessageByIdHandler(ApplicationDbContext context, IEncryptionService encryptionService)
         {
             _context = context;
             _encryptionService = encryptionService;
