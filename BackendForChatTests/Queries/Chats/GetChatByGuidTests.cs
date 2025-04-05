@@ -8,10 +8,10 @@ using System;
 namespace BackendForChatTests.Queries.Chats
 {
     [TestFixture]
-    public class GetChatByIdTests
+    public class GetChatByGuidTests
     {
         private ApplicationDbContext _context;
-        private GetChatByIdHandler _handler;
+        private GetChatByGuidHandler _handler;
         private Guid _chatId;
         private ChatTypeModel _chatType;
         private ChatModel _chat;
@@ -32,12 +32,12 @@ namespace BackendForChatTests.Queries.Chats
             _context.Chats.Add(_chat);
             _context.SaveChanges();
 
-            _handler = new GetChatByIdHandler(_context);
+            _handler = new GetChatByGuidHandler(_context);
         }
         [Test]
-        public async Task GetChatById_Should_ReturnSuccessResultAndChatId_WhenChatExists()
+        public async Task GetChatById_ShouldReturn_SuccessResultAndChatId_WhenChatExists()
         {
-            var query = new GetChatByIdQuery(_chatId);
+            var query = new GetChatByGuidQuery(_chatId);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -45,9 +45,9 @@ namespace BackendForChatTests.Queries.Chats
             Assert.That(result.Data.ChatId, Is.EqualTo(_chatId));
         }
         [Test]
-        public async Task GetChatById_Should_ReturnFailResultAndErorrMessage_WhenChatDoesNotExists()
+        public async Task GetChatById_ShouldReturn_FailResultAndErorrMessage_WhenChatDoesNotExists()
         {
-            var query = new GetChatByIdQuery(Guid.NewGuid());
+            var query = new GetChatByGuidQuery(Guid.NewGuid());
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
