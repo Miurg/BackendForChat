@@ -73,7 +73,7 @@ namespace BackendForChatTests.Queries.Chats
         [Test]
         public async Task FindPrivateChatByUsers_Should_ReturnFailResultAndErrorMessage_WhenChatNotExist()
         {
-            var query = new FindPrivateChatByUsersQuery(_user1Id, _user2Id);
+            var query = new FindPrivateChatByUsersQuery(_user1Id, _user3Id);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
