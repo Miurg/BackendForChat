@@ -5,6 +5,7 @@ using BackendForChat.Application.Queries.Users;
 using BackendForChat.Application.Services;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Models.Entities;
+using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -61,8 +62,8 @@ namespace BackendForChatTests.Queries.Auth
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result.Success, Is.True);
-            Assert.That(result.Data.Token, Is.EqualTo("test_token"));
+            result.Success.Should().BeTrue();
+            result.Data.Token.Should().BeEquivalentTo("test_token");
         }
 
         [Test]
@@ -77,8 +78,8 @@ namespace BackendForChatTests.Queries.Auth
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Invalid credentials"));
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().BeEquivalentTo("Invalid credentials");
         }
 
         [Test]
@@ -98,8 +99,8 @@ namespace BackendForChatTests.Queries.Auth
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Invalid credentials"));
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().BeEquivalentTo("Invalid credentials");
         }
 
         [TearDown]

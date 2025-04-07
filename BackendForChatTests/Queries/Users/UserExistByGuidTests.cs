@@ -1,6 +1,7 @@
 ﻿using BackendForChat.Application.Queries.Users;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Models.Entities;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace BackendForChatTests.Queries.Users
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result, Is.True);
+            result.Should().BeTrue();
         }
 
         [Test]
@@ -48,7 +49,7 @@ namespace BackendForChatTests.Queries.Users
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result, Is.False);
+            result.Should().BeFalse();
         }
         [TearDown]
         public void TearDown()

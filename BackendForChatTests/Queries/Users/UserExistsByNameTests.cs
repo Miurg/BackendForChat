@@ -3,6 +3,7 @@ using BackendForChat.Models.DatabaseContext;
 using Microsoft.EntityFrameworkCore;
 using BackendForChat.Models.Entities;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace BackendForChatTests
 {
@@ -35,7 +36,7 @@ namespace BackendForChatTests
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result, Is.True);
+            result.Should().BeTrue();
         }
 
         [Test]
@@ -45,7 +46,7 @@ namespace BackendForChatTests
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result, Is.False);
+            result.Should().BeFalse();
         }
 
         [TearDown]

@@ -1,6 +1,8 @@
-﻿using BackendForChat.Application.Queries.Chats;
+﻿using BackendForChat.Application.DTO.Responses;
+using BackendForChat.Application.Queries.Chats;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Models.Entities;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System;
@@ -28,6 +30,7 @@ namespace BackendForChatTests.Queries.Chats
         private UserModel _user1;
         private UserModel _user2;
         private UserModel _user3;
+        private ResponseChatCreateDto _responseChatCreateDto;
 
         [SetUp]
         public void SetUp()
@@ -48,6 +51,10 @@ namespace BackendForChatTests.Queries.Chats
             _user3 = new UserModel { Id = _user3Id, Username = "User3", PasswordHash = "Password3" };
             _chatUser1 = new ChatUserModel { ChatId = _chatId, UserId = _user1Id };
             _chatUser2 = new ChatUserModel { ChatId = _chatId, UserId = _user2Id };
+            _responseChatCreateDto = new ResponseChatCreateDto
+            {
+                ChatId = _chatId,
+            };
 
             _context.ChatTypes.Add(_chatType);
             _context.Chats.Add(_chat);
@@ -67,8 +74,8 @@ namespace BackendForChatTests.Queries.Chats
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result.Success, Is.True);
-            Assert.That(result.Data.ChatId, Is.EqualTo(_chatId));
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeEquivalentTo(_responseChatCreateDto);
         }
         [Test]
         public async Task FindPrivateChatByUsers_ShouldReturn_FailResultAndErrorMessage_WhenChatNotExist()
@@ -77,8 +84,8 @@ namespace BackendForChatTests.Queries.Chats
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Chat with this user does not exist"));
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().BeEquivalentTo("Chat with this user does not exist");
         }
         [TearDown]
         public void TearDown()
