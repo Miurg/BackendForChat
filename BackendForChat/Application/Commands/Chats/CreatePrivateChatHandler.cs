@@ -34,10 +34,10 @@ namespace BackendForChat.Application.Commands.Chats
             };
 
             chat.ChatUsers = new List<ChatUserModel>
-        {
-            new ChatUserModel { UserId = request.FirstUserId, Chat = chat },
-            new ChatUserModel { UserId = request.SecondUserId, Chat = chat }
-        };
+            {
+                new ChatUserModel { UserId = request.FirstUserId, Chat = chat },
+                new ChatUserModel { UserId = request.SecondUserId, Chat = chat }
+            };
 
             _context.Chats.Add(chat);
             await _context.SaveChangesAsync(cancellationToken);
