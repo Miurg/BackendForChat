@@ -30,7 +30,7 @@ namespace BackendForChatTests
         }
 
         [Test]
-        public async Task UserExistsByName_Should_ReturnTrueResult_WhenUserExists()
+        public async Task UserExistsByName_ShouldReturn_TrueResult_WhenUserExists()
         {
             var query = new UserExistsByNameQuery(_username);
 
@@ -40,7 +40,7 @@ namespace BackendForChatTests
         }
 
         [Test]
-        public async Task UserExistsByName_Should_ReturnFalseResult_WhenUserDoesNotExist()
+        public async Task UserExistsByName_ShouldReturn_FalseResult_WhenUserDoesNotExist()
         {
             var query = new UserExistsByNameQuery("non_existing_user");
 
