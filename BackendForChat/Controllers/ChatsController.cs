@@ -25,7 +25,7 @@ namespace BackendForChat.Controllers
         {
             if (!(await _mediator.Send(new UserExistByGuidQuery(chatRequest.userId))))
             {
-                return BadRequest(new { error = "User already exists" });
+                return BadRequest(new { error = "User with that guid does not exists" });
             }
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
