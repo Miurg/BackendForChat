@@ -34,9 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Commands\Auth\" />
-    <Folder Include="Commands\Chats\" />
-    <Folder Include="Commands\Messages\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
