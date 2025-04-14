@@ -53,7 +53,7 @@ namespace BackendForChatTests.Queries.Chats
             result.Data.Should().BeEquivalentTo(_responseChatCreateDto);
         }
         [Test]
-        public async Task GetChatById_ShouldReturn_FailResultAndErorrMessage_WhenChatDoesNotExists()
+        public async Task GetChatById_ShouldReturn_FailResultAndErorrMessage_WhenChatNotExists()
         {
             var query = new GetChatByGuidQuery(Guid.NewGuid());
 

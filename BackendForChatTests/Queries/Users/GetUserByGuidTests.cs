@@ -59,7 +59,7 @@ namespace BackendForChatTests.Queries.Users
         }
 
         [Test]
-        public async Task GetUserByGuid_ShouldReturn_FailResultAndErrorMessage_WhenUserDoesNotExist()
+        public async Task GetUserByGuid_ShouldReturn_FailResultAndErrorMessage_WhenUserNotExist()
         {
             var query = new GetUserByGuidQuery(Guid.NewGuid());
 

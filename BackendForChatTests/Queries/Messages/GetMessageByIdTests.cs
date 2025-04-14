@@ -116,7 +116,7 @@ namespace BackendForChatTests.Queries.Messages
             result.Data.Should().BeEquivalentTo(_responseMessage1);
         }
         [Test]
-        public async Task GetMessageById_ShouldReturn_FailResultAndErrorMessage_WhenMessageDoesNotExist()
+        public async Task GetMessageById_ShouldReturn_FailResultAndErrorMessage_WhenMessageNotExist()
         {
             var query = new GetMessageByIdQuery(10, _user1Id);
 
@@ -126,7 +126,7 @@ namespace BackendForChatTests.Queries.Messages
             result.ErrorMessage.Should().BeEquivalentTo("Message with that id doesn't exist");
         }
         [Test]
-        public async Task GetMessageById_ShouldReturn_FailResultAndErrorMessage_WhenUserDoesNotBelondToChat()
+        public async Task GetMessageById_ShouldReturn_FailResultAndErrorMessage_WhenUserNotBelondToChat()
         {
             var query = new GetMessageByIdQuery(_messageId2, _user1Id);
 
