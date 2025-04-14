@@ -1,8 +1,11 @@
 ﻿using BackendForChat.Application.Commands.Chats;
+using BackendForChat.Application.Queries.Users;
 using BackendForChat.Models.DatabaseContext;
 using BackendForChat.Models.Entities;
 using FluentAssertions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +14,18 @@ using System.Threading.Tasks;
 
 namespace BackendForChatTests.Commands.Chats
 {
+    [TestFixture]
     public class CreateGroupChatTests
     {
         private ApplicationDbContext _context;
         private CreateGroupChatHandler _handler;
+        private Mock<IMediator> mediatorMock;
 
         private Guid _guidUser1;
         private Guid _guidUser2;
         private Guid _guidUser3;
         private Guid _guidUser4;
-        private List<Guid> _guidUsers = new List<Guid>();
+        private List<Guid> _guidUsers;
         private ChatTypeModel _chatType;
 
         [SetUp]
@@ -36,6 +41,7 @@ namespace BackendForChatTests.Commands.Chats
             _guidUser3 = Guid.NewGuid();
             _guidUser4 = Guid.NewGuid();
 
+            _guidUsers = new List<Guid>();
             _guidUsers.Add(_guidUser1);
             _guidUsers.Add(_guidUser2);
             _guidUsers.Add(_guidUser3);
@@ -47,10 +53,32 @@ namespace BackendForChatTests.Commands.Chats
             _context.ChatTypes.Add(_chatType);
             _context.SaveChanges();
 
-            _handler = new CreateGroupChatHandler(_context);
+            mediatorMock = new Mock<IMediator>();
+
+            _handler = new CreateGroupChatHandler(_context, mediatorMock.Object);
+            mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<UserExistByGuidQuery>(q => q.Id == _guidUser1),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<UserExistByGuidQuery>(q => q.Id == _guidUser2),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<UserExistByGuidQuery>(q => q.Id == _guidUser3),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<UserExistByGuidQuery>(q => q.Id == _guidUser4),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
         }
         [Test]
-        public async Task CreatePrivateChat_ShouldCreate_PrivateChat_WhenChatTypeExists()
+        public async Task CreatePrivateChat_ShouldCreatePrivateChatAndReturn_ChatId_WhenChatTypeAndUsersExists()
         {
             var command = new CreateGroupChatCommand(_guidUsers);
 
@@ -73,7 +101,7 @@ namespace BackendForChatTests.Commands.Chats
         }
 
         [Test]
-        public async Task CreatePrivateChat_ShouldFailCreate_PrivateChat_WhenChatTypeNotExists()
+        public async Task CreatePrivateChat_ShouldFailCreateAndReturn_FailResultAndErrorMessage_WhenChatTypeNotExists()
         {
             _context.ChatTypes.RemoveRange(_context.ChatTypes);
             _context.SaveChanges();
@@ -85,6 +113,22 @@ namespace BackendForChatTests.Commands.Chats
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Chat type not found");
+        }
+        [Test]
+        public async Task CreatePrivateChat_ShouldFailCreateAndReturn_FailResultAndErrorMessage_WhenOneOfUsersNotExists()
+        {
+            mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<UserExistByGuidQuery>(q => q.Id == _guidUser4),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var command = new CreateGroupChatCommand(_guidUsers);
+
+            var result = await _handler.Handle(command, CancellationToken.None);
+
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().Be("User with that id doesn't exist");
         }
         [TearDown]
         public void TearDown()
