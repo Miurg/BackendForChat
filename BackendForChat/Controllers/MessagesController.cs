@@ -49,10 +49,7 @@ namespace BackendForChat.Controllers
             if (page < 1) page = 1;
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized(new { message = "User not authenticated" });
-            }
+
             Guid userId = Guid.Parse(userIdClaim.Value);
 
             var messages = await _mediator.Send(new GetMessagesPagedQuery(page, pageSize, userId, chatId));
@@ -75,10 +72,7 @@ namespace BackendForChat.Controllers
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized(new { message = "User not authenticated" });
-            }
+
             Guid userId = Guid.Parse(userIdClaim.Value);
 
             var message = await _mediator.Send(new SaveMessageCommand(model, userId));
