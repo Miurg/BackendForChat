@@ -4,5 +4,5 @@ using MediatR;
 
 namespace BackendForChat.Application.Queries.Messages
 {
-    public record GetMessageByIdQuery (int id, Guid userId) : IRequest<ServiceResult<ResponseMessageDto>>;
+    public record GetMessageByIdQuery (int id) : IRequest<ServiceResult<ResponseMessageDto>>;
 }

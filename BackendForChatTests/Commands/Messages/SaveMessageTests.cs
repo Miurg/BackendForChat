@@ -26,7 +26,7 @@ namespace BackendForChatTests.Commands.Messages
         private ApplicationDbContext _context;
         private SaveMessageHandler _handler;
         private Mock<IEncryptionService> _encryptionServiceMock;
-        private Mock<IMediator> mediatorMock;
+        private Mock<ICurrentUserService> _currentUserMock;
 
         private Guid _userGuid1;
         private Guid _userGuid2;
@@ -87,30 +87,28 @@ namespace BackendForChatTests.Commands.Messages
 
             _encryptionServiceMock = new Mock<IEncryptionService>();
 
-            mediatorMock = new Mock<IMediator>();
 
-            _handler = new SaveMessageHandler(_context, _encryptionServiceMock.Object, mediatorMock.Object);
+            _currentUserMock = new Mock<ICurrentUserService>();
+
+            _handler = new SaveMessageHandler(_context, _encryptionServiceMock.Object, _currentUserMock.Object);
             _encryptionServiceMock
                 .Setup(j => j.Encrypt("Random"))
                 .Returns("Random");
             _encryptionServiceMock
                 .Setup(j => j.Decrypt("Random"))
                 .Returns("Random");
+            _currentUserMock.Setup(x => x.UserId).Returns(_userGuid1);
         }
         [Test]
         public async Task SaveMessage_ShouldSaveMessageAndReturn_SuccessResultAndResponseMessageDto_WhenValidChatAndUser()
         {
-            mediatorMock
-                .Setup(m => m.Send(
-                    It.Is<UserExistByGuidQuery>(q => q.Id == _userGuid1),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
+
             RequestMessageDto requestMessage = new RequestMessageDto
             { 
                 ChatId = _chatId1,
                 Content = "Random"
             };
-            var query = new SaveMessageCommand(requestMessage, _userGuid1);
+            var query = new SaveMessageCommand(requestMessage);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -123,39 +121,14 @@ namespace BackendForChatTests.Commands.Messages
             createdChat.Should().NotBeNull();
         }
         [Test]
-        public async Task SaveMessage_ShouldFailSaveMessageAndReturn_FailResultAndErrorMessage_WhenUserNotExist()
-        {
-            mediatorMock
-               .Setup(m => m.Send(
-                   It.Is<UserExistByGuidQuery>(q => q.Id == _userGuid1),
-                   It.IsAny<CancellationToken>()))
-               .ReturnsAsync(false);
-            RequestMessageDto requestMessage = new RequestMessageDto
-            {
-                ChatId = _chatId1,
-                Content = "Random"
-            };
-            var query = new SaveMessageCommand(requestMessage, Guid.NewGuid());
-
-            var result = await _handler.Handle(query, CancellationToken.None);
-
-            result.Success.Should().BeFalse();
-            result.ErrorMessage.Should().BeEquivalentTo("User with that id doesn't exist");
-        }
-        [Test]
         public async Task SaveMessage_ShouldFailSaveMessageAndReturn_FailResultAndErrorMessage_WhenChatNotExist()
         {
-            mediatorMock
-               .Setup(m => m.Send(
-                   It.Is<UserExistByGuidQuery>(q => q.Id == _userGuid1),
-                   It.IsAny<CancellationToken>()))
-               .ReturnsAsync(true);
             RequestMessageDto requestMessage = new RequestMessageDto
             {
                 ChatId = Guid.NewGuid(),
                 Content = "Random"
             };
-            var query = new SaveMessageCommand(requestMessage, _userGuid1);
+            var query = new SaveMessageCommand(requestMessage);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -165,17 +138,12 @@ namespace BackendForChatTests.Commands.Messages
         [Test]
         public async Task SaveMessage_ShouldFailSaveMessageAndReturn_FailResultAndErrorMessage_WhenUserNotBelongToChat()
         {
-            mediatorMock
-               .Setup(m => m.Send(
-                   It.Is<UserExistByGuidQuery>(q => q.Id == _userGuid1),
-                   It.IsAny<CancellationToken>()))
-               .ReturnsAsync(true);
             RequestMessageDto requestMessage = new RequestMessageDto
             {
                 ChatId = _chatId2,
                 Content = "Random"
             };
-            var query = new SaveMessageCommand(requestMessage, _userGuid1);
+            var query = new SaveMessageCommand(requestMessage);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 

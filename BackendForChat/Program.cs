@@ -47,8 +47,8 @@ builder.Services.AddSingleton<IEncryptionService>(provider =>
         new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<JwtService>();
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 builder.WebHost.UseKestrel(options =>
 {
@@ -63,6 +63,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.G
 
 var app = builder.Build();
 
+app.UseMiddleware<ValidateUserMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -71,8 +73,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 
 }
-app.UseMiddleware<ValidateUserMiddleware>();
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.MapHub<MessageHub>("/messageHub");
 app.UseHttpsRedirection();
 

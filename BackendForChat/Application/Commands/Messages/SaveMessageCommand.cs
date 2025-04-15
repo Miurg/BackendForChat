@@ -5,6 +5,6 @@ using MediatR;
 
 namespace BackendForChat.Application.Commands.Messages
 {
-    public record SaveMessageCommand(RequestMessageDto newMessage, Guid userId) : IRequest<ServiceResult<ResponseMessageDto>>;
+    public record SaveMessageCommand(RequestMessageDto newMessage) : IRequest<ServiceResult<ResponseMessageDto>>;
 }
 

@@ -1,4 +1,5 @@
-﻿using BackendForChat.Models.DatabaseContext;
+﻿using BackendForChat.Application.DTO;
+using BackendForChat.Models.DatabaseContext;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -57,6 +58,9 @@ namespace BackendForChat.Middleware
                 await context.Response.WriteAsync("User does not exist or has been deleted");
                 return;
             }
+
+            CurrentUserInfo currentUserInfo = new CurrentUserInfo { UserId = userId };
+            context.Items["CurrentUser"] = currentUserInfo;
 
             await _next(context);
         }

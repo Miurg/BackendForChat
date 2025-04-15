@@ -12,15 +12,17 @@ namespace BackendForChat.Application.Queries.Messages
     {
         private readonly ApplicationDbContext _context;
         private readonly IEncryptionService _encryptionService;
-        public GetMessagesPagedHandler(ApplicationDbContext context, IEncryptionService encryptionService)
+        private readonly ICurrentUserService _currentUserService;
+        public GetMessagesPagedHandler(ApplicationDbContext context, IEncryptionService encryptionService, ICurrentUserService currentUserService)
         {
             _context = context;
             _encryptionService = encryptionService;
+            _currentUserService = currentUserService;
         }
         public async Task<ServiceResult<List<ResponseMessageDto>>> Handle(GetMessagesPagedQuery request, CancellationToken cancellationToken)
         {
             bool userInChat = await _context.ChatUsers
-               .AnyAsync(uc => uc.ChatId == request.chatId && uc.UserId == request.userId, cancellationToken);
+               .AnyAsync(uc => uc.ChatId == request.chatId && uc.UserId == _currentUserService.UserId, cancellationToken);
             if (!userInChat)
             {
                 return ServiceResult<List<ResponseMessageDto>>.Fail("User doesn't belong to chat");

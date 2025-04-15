@@ -27,13 +27,7 @@ namespace BackendForChat.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetMessageById(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized(new { message = "User not authenticated" });
-            }
-            Guid userId = Guid.Parse(userIdClaim.Value);
-            var message = await _mediator.Send(new GetMessageByIdQuery(id, userId));
+            var message = await _mediator.Send(new GetMessageByIdQuery(id));
             if (!message.Success)
             {
                 return NotFound(new { error = message.ErrorMessage });
@@ -48,11 +42,7 @@ namespace BackendForChat.Controllers
             if (pageSize > 100 || pageSize < 1) pageSize = 100; 
             if (page < 1) page = 1;
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-            Guid userId = Guid.Parse(userIdClaim.Value);
-
-            var messages = await _mediator.Send(new GetMessagesPagedQuery(page, pageSize, userId, chatId));
+            var messages = await _mediator.Send(new GetMessagesPagedQuery(page, pageSize, chatId));
 
             if (!messages.Success)
             {
@@ -71,11 +61,7 @@ namespace BackendForChat.Controllers
                 return BadRequest(new { message = "Invalid message data." });
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-            Guid userId = Guid.Parse(userIdClaim.Value);
-
-            var message = await _mediator.Send(new SaveMessageCommand(model, userId));
+            var message = await _mediator.Send(new SaveMessageCommand(model));
             if (!message.Success)
             {
                 return BadRequest(new { error = message.ErrorMessage });

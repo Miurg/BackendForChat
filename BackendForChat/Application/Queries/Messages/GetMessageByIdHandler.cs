@@ -14,10 +14,12 @@ namespace BackendForChat.Application.Queries.Messages
     {
         private readonly ApplicationDbContext _context;
         private readonly IEncryptionService _encryptionService;
-        public GetMessageByIdHandler(ApplicationDbContext context, IEncryptionService encryptionService)
+        private readonly ICurrentUserService _currentUserService;
+        public GetMessageByIdHandler(ApplicationDbContext context, IEncryptionService encryptionService, ICurrentUserService currentUserService)
         {
             _context = context;
             _encryptionService = encryptionService;
+            _currentUserService = currentUserService;
         }
         public async Task<ServiceResult<ResponseMessageDto>> Handle(GetMessageByIdQuery request, CancellationToken cancellationToken)
         {
@@ -30,7 +32,7 @@ namespace BackendForChat.Application.Queries.Messages
             {
                 return ServiceResult<ResponseMessageDto>.Fail("Message with that id doesn't exist");
             }
-            if (!message.Chat.ChatUsers.Any(user => user.User.Id == request.userId))
+            if (!message.Chat.ChatUsers.Any(user => user.User.Id == _currentUserService.UserId))
             {
                 return ServiceResult<ResponseMessageDto>.Fail("User doesn't belong to chat");
             }

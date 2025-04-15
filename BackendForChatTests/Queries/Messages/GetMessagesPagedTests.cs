@@ -20,6 +20,7 @@ namespace BackendForChatTests.Queries.Messages
         private ApplicationDbContext _context;
         private GetMessagesPagedHandler _handler;
         private Mock<IEncryptionService> _encryptionServiceMock;
+        private Mock<ICurrentUserService> _currentUserMock;
 
         private Guid _chatId1;
         private Guid _chatId2;
@@ -30,9 +31,9 @@ namespace BackendForChatTests.Queries.Messages
         private ChatUserModel _chatUser2;
         private ChatUserModel _chatUser3;
         private ChatUserModel _chatUser4;
-        private Guid _user1Id;
-        private Guid _user2Id;
-        private Guid _user3Id;
+        private Guid _userGuid1;
+        private Guid _userGuid2;
+        private Guid _userGuid3;
         private UserModel _user1;
         private UserModel _user2;
         private UserModel _user3;
@@ -57,25 +58,25 @@ namespace BackendForChatTests.Queries.Messages
 
             _chatId1 = Guid.NewGuid();
             _chatId2 = Guid.NewGuid();
-            _user1Id = Guid.NewGuid();
-            _user2Id = Guid.NewGuid();
-            _user3Id = Guid.NewGuid();
+            _userGuid1 = Guid.NewGuid();
+            _userGuid2 = Guid.NewGuid();
+            _userGuid3 = Guid.NewGuid();
             _chatType = new ChatTypeModel { Id = 1, Type = "Private" };
             _chat1 = new ChatModel { Id = _chatId1, ChatTypeId = _chatType.Id };
             _chat2 = new ChatModel { Id = _chatId2, ChatTypeId = _chatType.Id };
-            _user1 = new UserModel { Id = _user1Id, Username = "User1", PasswordHash = "Password1" };
-            _user2 = new UserModel { Id = _user2Id, Username = "User2", PasswordHash = "Password2" };
-            _user3 = new UserModel { Id = _user3Id, Username = "User3", PasswordHash = "Password3" };
-            _chatUser1 = new ChatUserModel { ChatId = _chatId1, UserId = _user1Id };
-            _chatUser2 = new ChatUserModel { ChatId = _chatId1, UserId = _user2Id };
-            _chatUser3 = new ChatUserModel { ChatId = _chatId2, UserId = _user3Id };
-            _chatUser4 = new ChatUserModel { ChatId = _chatId2, UserId = _user2Id };
+            _user1 = new UserModel { Id = _userGuid1, Username = "User1", PasswordHash = "Password1" };
+            _user2 = new UserModel { Id = _userGuid2, Username = "User2", PasswordHash = "Password2" };
+            _user3 = new UserModel { Id = _userGuid3, Username = "User3", PasswordHash = "Password3" };
+            _chatUser1 = new ChatUserModel { ChatId = _chatId1, UserId = _userGuid1 };
+            _chatUser2 = new ChatUserModel { ChatId = _chatId1, UserId = _userGuid2 };
+            _chatUser3 = new ChatUserModel { ChatId = _chatId2, UserId = _userGuid3 };
+            _chatUser4 = new ChatUserModel { ChatId = _chatId2, UserId = _userGuid2 };
             _messageId3 = 3;
-            _message3 = new MessageModel { Id = _messageId3, ChatId = _chatId2, Content = "Random", SenderId = _user2Id };
+            _message3 = new MessageModel { Id = _messageId3, ChatId = _chatId2, Content = "Random", SenderId = _userGuid2 };
             _messageId2 = 2;
-            _message2 = new MessageModel { Id = _messageId2, ChatId = _chatId1, Content = "Random", SenderId = _user2Id };
+            _message2 = new MessageModel { Id = _messageId2, ChatId = _chatId1, Content = "Random", SenderId = _userGuid2 };
             _messageId1 = 1;
-            _message1 = new MessageModel { Id = _messageId1, ChatId = _chatId1, Content = "Random", SenderId = _user1Id };
+            _message1 = new MessageModel { Id = _messageId1, ChatId = _chatId1, Content = "Random", SenderId = _userGuid1 };
 
             _responseMessage1 = new ResponseMessageDto
             {
@@ -109,8 +110,11 @@ namespace BackendForChatTests.Queries.Messages
             _context.SaveChanges();
 
             _encryptionServiceMock = new Mock<IEncryptionService>();
+            _currentUserMock = new Mock<ICurrentUserService>();
 
-            _handler = new GetMessagesPagedHandler(_context, _encryptionServiceMock.Object);
+            _handler = new GetMessagesPagedHandler(_context, _encryptionServiceMock.Object, _currentUserMock.Object);
+
+            _currentUserMock.Setup(x => x.UserId).Returns(_userGuid1);
         }
         [Test]
         public async Task GetMessagesPaged_ShouldReturn_SuccesResultAndMessages_WhenMessagesExistAndUserInChat()
@@ -119,7 +123,7 @@ namespace BackendForChatTests.Queries.Messages
                 .Setup(j => j.Decrypt("Random"))
                 .Returns("Random");
 
-            var query = new GetMessagesPagedQuery(0,2, _user1Id,_chatId1);
+            var query = new GetMessagesPagedQuery(0,2,_chatId1);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -134,7 +138,7 @@ namespace BackendForChatTests.Queries.Messages
                .Setup(j => j.Decrypt("Random"))
                .Returns("Random");
 
-            var query = new GetMessagesPagedQuery(0, 2, _user1Id, _chatId2);
+            var query = new GetMessagesPagedQuery(0, 2, _chatId2);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -148,7 +152,7 @@ namespace BackendForChatTests.Queries.Messages
                .Setup(j => j.Decrypt("Random"))
                .Returns("Random");
 
-            var query = new GetMessagesPagedQuery(-1, -1, _user1Id, _chatId1);
+            var query = new GetMessagesPagedQuery(-1, -1, _chatId1);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -162,7 +166,7 @@ namespace BackendForChatTests.Queries.Messages
                .Setup(j => j.Decrypt("Random"))
                .Returns("Random");
 
-            var query = new GetMessagesPagedQuery(10, 10, _user1Id, _chatId1);
+            var query = new GetMessagesPagedQuery(10, 10, _chatId1);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 

@@ -15,23 +15,19 @@ namespace BackendForChat.Application.Commands.Messages
     {
         private readonly ApplicationDbContext _context;
         private readonly IEncryptionService _encryptionService;
-        private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SaveMessageHandler(ApplicationDbContext context, IEncryptionService encryptionService, IMediator mediator)
+        public SaveMessageHandler(ApplicationDbContext context, IEncryptionService encryptionService, ICurrentUserService currentUserService)
         {
             _context = context;
             _encryptionService = encryptionService;
-            _mediator = mediator;
+            _currentUserService = currentUserService;
         }
         public async Task<ServiceResult<ResponseMessageDto>> Handle(SaveMessageCommand request, CancellationToken cancellationToken)
         {
-            if (!await _mediator.Send(new UserExistByGuidQuery(request.userId)))
-            {
-                return ServiceResult<ResponseMessageDto>.Fail("User with that id doesn't exist");
-            }
 
             bool userInChat = await _context.ChatUsers
-               .AnyAsync(uc => uc.ChatId == request.newMessage.ChatId && uc.UserId == request.userId, cancellationToken);
+               .AnyAsync(uc => uc.ChatId == request.newMessage.ChatId && uc.UserId == _currentUserService.UserId, cancellationToken);
             if (!userInChat)
             {
                 return ServiceResult<ResponseMessageDto>.Fail("User doesn't belong to chat");
@@ -41,7 +37,7 @@ namespace BackendForChat.Application.Commands.Messages
             {
                 ChatId = request.newMessage.ChatId,
                 Content = _encryptionService.Encrypt(request.newMessage.Content),
-                SenderId = request.userId,
+                SenderId = _currentUserService.UserId,
                 CreatedAt = DateTime.UtcNow
             };
             _context.Messages.Add(message);

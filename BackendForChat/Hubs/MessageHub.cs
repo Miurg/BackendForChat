@@ -33,9 +33,7 @@ namespace BackendForChat.Hubs
         //}
         public async Task SendMessage(RequestMessageDto model)
         {
-            var userIdClaim = Context.User.FindFirst(ClaimTypes.NameIdentifier);
-            Guid userId = Guid.Parse(userIdClaim.Value);
-            var message = await _mediator.Send(new SaveMessageCommand(model,userId));
+            var message = await _mediator.Send(new SaveMessageCommand(model));
             await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }
