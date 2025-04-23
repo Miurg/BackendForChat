@@ -42,6 +42,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSingleton<IEncryptionService>(provider =>
         new EncryptionService(builder.Configuration["JwtSettings:EncryptionKey"]));
