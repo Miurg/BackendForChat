@@ -39,7 +39,7 @@ namespace BackendForChat.Controllers
         [HttpGet("paged/{chatId:guid}")]
         public async Task<IActionResult> GetMessagesPaged(Guid chatId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            if (pageSize > 100 || pageSize < 1) pageSize = 100; 
+            if (pageSize > 100 || pageSize < 1) pageSize = 20; 
             if (page < 1) page = 1;
 
             var messages = await _mediator.Send(new GetMessagesPagedQuery(page, pageSize, chatId));
