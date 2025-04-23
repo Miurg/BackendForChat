@@ -20,6 +20,16 @@ namespace BackendForChat.Controllers
         {
             _mediator = mediator;
         }
+        [HttpGet]
+        public async Task<IActionResult> GetChatsForCurrentUser()
+        {
+            var result = await _mediator.Send(new GetUserChatsQuery());
+
+            if (!result.Success)
+                return BadRequest(result.ErrorMessage);
+
+            return Ok(result.Data);
+        }
         [HttpPost("get-or-create")]
         public async Task<IActionResult> GetOrCreatePrivateChatAsync([FromBody] RequestChatPrivateCreateDto chatRequest)
         {
